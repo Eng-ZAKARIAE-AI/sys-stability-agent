@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     llm_provider: str = Field(default="openrouter")
 
     openrouter_api_key: str = Field(default="")
+    openrouter_models: str = Field(default="openai/gpt-4o-mini")
     openrouter_model: str = Field(default="openai/gpt-4o-mini")
     openrouter_site_url: str = Field(default="http://localhost")
     openrouter_app_name: str = Field(default="sys-stability-agent")

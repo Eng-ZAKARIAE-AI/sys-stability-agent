@@ -65,7 +65,7 @@ class OpenRouterSession:
     def __init__(
         self,
         api_key: str,
-        model: str,
+        models: list[str],
         system_instruction: str,
         tool_map: dict[str, Callable[..., Any]],
         site_url: str = "",
@@ -82,23 +82,37 @@ class OpenRouterSession:
             base_url=OPENROUTER_BASE_URL,
             default_headers=headers or None,
         )
-        self.model = model
+        self.models = models
+        self.model = models[0] if models else "openai/gpt-4o-mini"
         self.tool_map = tool_map
         self.tools = _tool_schemas()
         self.messages: list[dict[str, Any]] = [
             {"role": "system", "content": system_instruction}
         ]
 
+    def _create_with_fallback(
+        self, messages: list[dict[str, Any]], tools: list[dict[str, Any]]
+    ) -> Any:
+        last_error: Exception | None = None
+        for model in self.models:
+            try:
+                return self.client.chat.completions.create(
+                    model=model,
+                    messages=messages,  # type: ignore[arg-type]
+                    tools=tools,  # type: ignore[arg-type]
+                    temperature=0.1,
+                )
+            except Exception as exc:  # noqa: BLE001
+                last_error = exc
+        if last_error is not None:
+            raise last_error
+        raise RuntimeError("No models available to try")
+
     def send_message(self, user_text: str) -> str:
         self.messages.append({"role": "user", "content": user_text})
 
         while True:
-            response = self.client.chat.completions.create(
-                model=self.model,
-                messages=self.messages,  # type: ignore[arg-type]
-                tools=self.tools,  # type: ignore[arg-type]
-                temperature=0.1,
-            )
+            response = self._create_with_fallback(self.messages, self.tools)
             msg = response.choices[0].message
             tool_calls = msg.tool_calls or []
 
@@ -117,8 +131,8 @@ class OpenRouterSession:
                             "id": tc.id,
                             "type": "function",
                             "function": {
-                                "name": tc.function.name,  # type: ignore[union-attr]
-                                "arguments": tc.function.arguments,  # type: ignore[union-attr]
+                                "name": tc.function.name,
+                                "arguments": tc.function.arguments,
                             },
                         }
                         for tc in tool_calls
@@ -127,8 +141,8 @@ class OpenRouterSession:
             )
 
             for tc in tool_calls:
-                fn_name = tc.function.name  # type: ignore[union-attr]
-                raw_args = tc.function.arguments or "{}"  # type: ignore[union-attr]
+                fn_name = tc.function.name
+                raw_args = tc.function.arguments or "{}"
                 try:
                     args = json.loads(raw_args)
                 except json.JSONDecodeError:
@@ -180,6 +194,7 @@ def create_agent_session(
     system_instruction: str,
     tools: list[Callable[..., Any]],
     openrouter_api_key: str,
+    openrouter_models: str,
     openrouter_model: str,
     gemini_api_key: str,
     gemini_model: str,
@@ -189,9 +204,10 @@ def create_agent_session(
     normalized = provider.strip().lower()
     if normalized == "openrouter":
         tool_map = {fn.__name__: fn for fn in tools}
+        models = [m.strip() for m in openrouter_models.split(",") if m.strip()] or [openrouter_model]
         return OpenRouterSession(
             api_key=openrouter_api_key,
-            model=openrouter_model,
+            models=models,
             system_instruction=system_instruction,
             tool_map=tool_map,
             site_url=site_url,

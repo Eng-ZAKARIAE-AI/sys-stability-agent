@@ -46,6 +46,7 @@ def main() -> None:
         system_instruction=SYSTEM_INSTRUCTION,
         tools=[check_system_metrics, inspect_process_or_logs, execute_intervention, take_screenshot],
         openrouter_api_key=settings.openrouter_api_key,
+        openrouter_models=settings.openrouter_models,
         openrouter_model=settings.openrouter_model,
         gemini_api_key=settings.gemini_api_key,
         gemini_model=settings.gemini_model,
