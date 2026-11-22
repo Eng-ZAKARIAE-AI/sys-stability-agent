@@ -160,8 +160,8 @@ class GeminiSession:
         system_instruction: str,
         tools: list[Callable[..., Any]],
     ) -> None:
-        client = genai.Client(api_key=api_key or None)
-        self._chat = client.chats.create(
+        self.client = genai.Client(api_key=api_key or None)
+        self._chat = self.client.chats.create(
             model=model,
             config=types.GenerateContentConfig(
                 system_instruction=system_instruction,
