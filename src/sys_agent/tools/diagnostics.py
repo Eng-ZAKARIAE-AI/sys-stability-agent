@@ -53,7 +53,7 @@ def inspect_process_or_logs(pid: int = 0, service_name: str = "") -> str:
                 f"PID {pid} ({proc.name()}): status={proc.status()}, "
                 f"threads={proc.num_threads()}, ppid={proc.ppid()}, cmd='{cmdline}'"
             )
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001
             sections.append(f"Failed to inspect PID {pid}: {exc}")
 
     if service_name:

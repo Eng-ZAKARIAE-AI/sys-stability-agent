@@ -1,6 +1,7 @@
 import getpass
 import logging
 import subprocess
+from collections.abc import Callable
 
 from config.settings import settings
 from sys_agent.core.policy import InterventionState, is_command_safe
@@ -11,7 +12,7 @@ logger = logging.getLogger("sys_agent.intervention")
 PASSWORD_KEYWORDS = ("sudo", "su ", "ssh ")
 
 
-def build_intervention_tool(state: InterventionState):
+def build_intervention_tool(state: InterventionState) -> Callable[[str, str], str]:
     def execute_intervention(shell_command: str, reason: str) -> str:
         """Execute a remediation shell command only after user approval."""
         if not state.fix_approved:

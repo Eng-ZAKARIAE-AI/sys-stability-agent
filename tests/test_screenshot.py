@@ -1,11 +1,12 @@
 """Tests for the screenshot capture tool."""
 
 import base64
-import os
-import subprocess
+import re
+import shutil
 import sys
-import pytest
 from pathlib import Path
+
+import pytest
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
@@ -29,7 +30,6 @@ def test_take_screenshot_filepath_format():
         assert result["filepath"].startswith("/tmp/agent_screenshots/screen_")
         assert result["filepath"].endswith(".png")
         # Verify timestamp format YYYYMMDD_HHMMSS
-        import re
         assert re.search(r"screen_\d{8}_\d{6}\.png$", result["filepath"])
 
 
@@ -43,7 +43,7 @@ def test_take_screenshot_base64_valid():
             assert len(decoded) > 0
             # Check PNG signature (first 8 bytes)
             assert decoded[:8] == b"\x89PNG\r\n\x1a\n"
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001
             pytest.fail(f"Invalid base64 or not a PNG: {exc}")
 
 
@@ -58,7 +58,7 @@ def test_take_screenshot_file_exists():
 
 def test_take_screenshot_directory_created():
     """Test that the screenshot directory is created."""
-    result = take_screenshot()
+    take_screenshot()
     screenshot_dir = Path("/tmp/agent_screenshots")
     assert screenshot_dir.exists(), "Screenshot directory was not created"
     assert screenshot_dir.is_dir(), "Screenshot path is not a directory"
@@ -83,10 +83,6 @@ def test_screenshot_in_headless_environment():
     if result["error"]:
         assert len(result["error"]) > 0
         assert "failed" in result["error"].lower() or "available" in result["error"].lower()
-
-
-# Need to import shutil for the test above
-import shutil
 
 
 if __name__ == "__main__":
