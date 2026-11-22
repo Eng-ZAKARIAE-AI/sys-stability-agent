@@ -70,7 +70,7 @@ def main() -> None:
         except KeyboardInterrupt:
             print("\nExiting.")
             break
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001
             logger.error("Agent loop error: %s", exc)
 
 

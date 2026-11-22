@@ -95,8 +95,8 @@ class OpenRouterSession:
         while True:
             response = self.client.chat.completions.create(
                 model=self.model,
-                messages=self.messages,
-                tools=self.tools,
+                messages=self.messages,  # type: ignore[arg-type]
+                tools=self.tools,  # type: ignore[arg-type]
                 temperature=0.1,
             )
             msg = response.choices[0].message
@@ -117,8 +117,8 @@ class OpenRouterSession:
                             "id": tc.id,
                             "type": "function",
                             "function": {
-                                "name": tc.function.name,
-                                "arguments": tc.function.arguments,
+                                "name": tc.function.name,  # type: ignore[union-attr]
+                                "arguments": tc.function.arguments,  # type: ignore[union-attr]
                             },
                         }
                         for tc in tool_calls
@@ -127,8 +127,8 @@ class OpenRouterSession:
             )
 
             for tc in tool_calls:
-                fn_name = tc.function.name
-                raw_args = tc.function.arguments or "{}"
+                fn_name = tc.function.name  # type: ignore[union-attr]
+                raw_args = tc.function.arguments or "{}"  # type: ignore[union-attr]
                 try:
                     args = json.loads(raw_args)
                 except json.JSONDecodeError:
@@ -140,7 +140,7 @@ class OpenRouterSession:
                 else:
                     try:
                         result = fn(**args)
-                    except Exception as exc:
+                    except Exception as exc:  # noqa: BLE001
                         result = f"Tool error ({fn_name}): {exc}"
 
                 self.messages.append(
@@ -165,7 +165,7 @@ class GeminiSession:
             model=model,
             config=types.GenerateContentConfig(
                 system_instruction=system_instruction,
-                tools=tools,
+tools=tools,  # type: ignore[arg-type]
                 temperature=0.1,
             ),
         )
