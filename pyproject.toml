@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sys-stability-agent"
+version = "0.1.0"
+description = "Terminal AI stability and intervention agent with human-in-the-loop remediation"
+requires-python = ">=3.10"
+dependencies = [
+    "google-genai>=1.0.0",
+    "openai>=1.0.0",
+    "psutil>=5.9.0",
+    "pydantic>=2.7.0",
+    "pydantic-settings>=2.2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "ruff>=0.4.0",
+    "mypy>=1.10.0",
+]
+
+[project.scripts]
+sys-agent = "sys_agent.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src", "config" = "config"}
+
+[tool.setuptools.packages.find]
+where = ["src", "."]
+include = ["sys_agent*", "config*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
